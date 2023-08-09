@@ -63,6 +63,17 @@ class TrieNode {
   // A map of children, where the key is the next character in the key, and the value is the next TrieNode.
   std::map<char, std::shared_ptr<const TrieNode>> children_;
 
+  auto UpdateMap(char c, std::shared_ptr<const TrieNode> new_node) const {
+    // Create a copy of the map
+    auto updated_map = children_;
+
+    // Update the copy
+    updated_map[c] = std::move(new_node);
+
+    // Replace the original map with the updated map
+    return updated_map;
+  }
+
   // Indicates if the node is the terminal node.
   bool is_value_node_{false};
 
@@ -107,7 +118,7 @@ class Trie {
 
  public:
   // Create an empty trie.
-  Trie() = default;
+  Trie() : root_(std::make_shared<TrieNode>()) {};
 
   // Get the value associated with the given key.
   // 1. If the key is not in the trie, return nullptr.

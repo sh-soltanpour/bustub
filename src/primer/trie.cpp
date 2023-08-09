@@ -1,4 +1,5 @@
 #include "primer/trie.h"
+#include <tclTomMathDecls.h>
 #include <string_view>
 #include "common/exception.h"
 
@@ -6,7 +7,20 @@ namespace bustub {
 
 template <class T>
 auto Trie::Get(std::string_view key) const -> const T * {
-  throw NotImplementedException("Trie::Get is not implemented.");
+  std::shared_ptr<const TrieNode> current = root_;
+  for (char c : key) {
+    auto next = current->children_.find(c);
+    if (next == current->children_.end()) {
+      return nullptr;
+    }
+    current = next->second;
+  }
+
+  const auto *value_node = dynamic_cast<const TrieNodeWithValue<T> *>(current.get());
+  if (!value_node) {
+    return nullptr;
+  }
+  return value_node->value_.get();
 
   // You should walk through the trie to find the node corresponding to the key. If the node doesn't exist, return
   // nullptr. After you find the node, you should use `dynamic_cast` to cast it to `const TrieNodeWithValue<T> *`. If
@@ -16,15 +30,85 @@ auto Trie::Get(std::string_view key) const -> const T * {
 
 template <class T>
 auto Trie::Put(std::string_view key, T value) const -> Trie {
-  // Note that `T` might be a non-copyable type. Always use `std::move` when creating `shared_ptr` on that value.
-  throw NotImplementedException("Trie::Put is not implemented.");
+  if (key.length() == 0) {
+    std::shared_ptr<T> shared_value = std::make_shared<T>(std::move(value));  // Create shared_ptr for value
+    auto new_node = std::make_shared<TrieNodeWithValue<T>>(TrieNodeWithValue(shared_value));
+    for (const auto &child : root_->children_) {
+      new_node->children_.insert(child);
+    }
+    return Trie(new_node);
+  }
 
-  // You should walk through the trie and create new nodes if necessary. If the node corresponding to the key already
-  // exists, you should create a new `TrieNodeWithValue`.
+  std::shared_ptr<TrieNode> current = root_->Clone();
+  auto trie = Trie(current);
+  std::shared_ptr<TrieNode> parent;
+  unsigned int i = 0;
+
+  for (char c : key) {
+    i++;
+    auto next = current->children_.find(c);
+    if (next != current->children_.end()) {
+      if (i == key.length()) {
+        // Change the current node to value node, and update the value
+        std::shared_ptr<T> shared_value = std::make_shared<T>(std::move(value));  // Create shared_ptr for value
+        auto new_node = std::make_shared<TrieNodeWithValue<T>>(TrieNodeWithValue(shared_value));
+        for (const auto &child : next->second->children_) {
+          new_node->children_.insert(child);
+        }
+        current->children_[c] = new_node;
+      } else {
+        parent = current;
+        current = next->second->Clone();
+        parent->children_[key[i - 1]] = current;
+      }
+    } else {
+      if (i == key.length()) {
+        std::shared_ptr<T> shared_value = std::make_shared<T>(std::move(value));  // Create shared_ptr for value
+        auto new_node = std::make_shared<TrieNodeWithValue<T>>(TrieNodeWithValue(shared_value));
+        new_node->is_value_node_ = true;
+        current->children_.insert(std::make_pair(c, new_node));
+      } else {
+        auto new_node = std::make_shared<TrieNode>();
+        current->children_.insert(std::make_pair(c, new_node));
+        parent = current;
+        current = new_node;
+      }
+    }
+  }
+
+  //  if (!current->is_value_node_) {
+  //    current->is_value_node_ = true;
+  //  }
+
+  return trie;
 }
 
 auto Trie::Remove(std::string_view key) const -> Trie {
-  throw NotImplementedException("Trie::Remove is not implemented.");
+  std::shared_ptr<TrieNode> current = root_->Clone();
+  auto trie = Trie(current);
+  std::shared_ptr<TrieNode> parent;
+
+  unsigned int i = 0;
+  for (char c : key) {
+    i++;
+    auto next = current->children_.find(c);
+    if (next == current->children_.end()) {
+      return *this;
+    }
+    parent = current;
+    current = next->second->Clone();
+    parent->children_[key[i - 1]] = current;
+  }
+  if (current->children_.empty()) {
+    parent->children_.erase(key[i - 1]);
+  } else {
+    auto new_node = std::make_shared<TrieNode>();
+    for (const auto &child : current->children_) {
+      new_node->children_.insert(child);
+    }
+    parent->children_[key[i - 1]] = new_node;
+  }
+  return trie;
 
   // You should walk through the trie and remove nodes if necessary. If the node doesn't contain a value any more,
   // you should convert it to `TrieNode`. If a node doesn't have children any more, you should remove it.
