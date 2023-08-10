@@ -1,5 +1,4 @@
 #include "primer/trie.h"
-#include <tclTomMathDecls.h>
 #include <string_view>
 #include "common/exception.h"
 
@@ -30,8 +29,9 @@ auto Trie::Get(std::string_view key) const -> const T * {
 
 template <class T>
 auto Trie::Put(std::string_view key, T value) const -> Trie {
+  std::shared_ptr<T> shared_value = std::make_shared<T>(std::move(value));  // Create shared_ptr for value
+
   if (key.length() == 0) {
-    std::shared_ptr<T> shared_value = std::make_shared<T>(std::move(value));  // Create shared_ptr for value
     auto new_node = std::make_shared<TrieNodeWithValue<T>>(TrieNodeWithValue(shared_value));
     for (const auto &child : root_->children_) {
       new_node->children_.insert(child);
@@ -50,7 +50,7 @@ auto Trie::Put(std::string_view key, T value) const -> Trie {
     if (next != current->children_.end()) {
       if (i == key.length()) {
         // Change the current node to value node, and update the value
-        std::shared_ptr<T> shared_value = std::make_shared<T>(std::move(value));  // Create shared_ptr for value
+
         auto new_node = std::make_shared<TrieNodeWithValue<T>>(TrieNodeWithValue(shared_value));
         for (const auto &child : next->second->children_) {
           new_node->children_.insert(child);
@@ -63,7 +63,6 @@ auto Trie::Put(std::string_view key, T value) const -> Trie {
       }
     } else {
       if (i == key.length()) {
-        std::shared_ptr<T> shared_value = std::make_shared<T>(std::move(value));  // Create shared_ptr for value
         auto new_node = std::make_shared<TrieNodeWithValue<T>>(TrieNodeWithValue(shared_value));
         new_node->is_value_node_ = true;
         current->children_.insert(std::make_pair(c, new_node));
@@ -75,10 +74,6 @@ auto Trie::Put(std::string_view key, T value) const -> Trie {
       }
     }
   }
-
-  //  if (!current->is_value_node_) {
-  //    current->is_value_node_ = true;
-  //  }
 
   return trie;
 }

@@ -118,7 +118,7 @@ class Trie {
 
  public:
   // Create an empty trie.
-  Trie() : root_(std::make_shared<TrieNode>()) {};
+  Trie() : root_(std::make_shared<TrieNode>()) {}
 
   // Get the value associated with the given key.
   // 1. If the key is not in the trie, return nullptr.

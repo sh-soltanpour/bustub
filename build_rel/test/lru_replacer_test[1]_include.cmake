@@ -1,0 +1,5 @@
+if(EXISTS "/Users/shahryar/Programming/cmu-db-course/bustub/build_rel/test/lru_replacer_test[1]_tests.cmake")
+  include("/Users/shahryar/Programming/cmu-db-course/bustub/build_rel/test/lru_replacer_test[1]_tests.cmake")
+else()
+  add_test(lru_replacer_test_NOT_BUILT lru_replacer_test_NOT_BUILT)
+endif()

@@ -1,0 +1,5 @@
+if(EXISTS "/Users/shahryar/Programming/cmu-db-course/bustub/build_rel/test/tuple_test[1]_tests.cmake")
+  include("/Users/shahryar/Programming/cmu-db-course/bustub/build_rel/test/tuple_test[1]_tests.cmake")
+else()
+  add_test(tuple_test_NOT_BUILT tuple_test_NOT_BUILT)
+endif()
